@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Filter Data</title>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Function to handle form submission
+    $('#filterForm').submit(function(event) {
+        // Prevent default form submission
+        event.preventDefault();
+
+        // Gather form data
+        var filterType = $('#filterType').val();
+        var filterValue = $('#filterValue').val();
+
+        // Send AJAX request to fetch filtered data
+        $.ajax({
+            type: 'POST',
+            url: 'player_record.php',
+            data: {
+                filter_type: filterType,
+                filter_value: filterValue
+            },
+            dataType: 'json',
+            success: function(response) {
+                // Clear previous table content
+                $('#dataTable tbody').empty();
+
+                // Append filtered data to table
+                $.each(response, function(index, row) {
+                    $('#dataTable tbody').append('<tr><td>' + row.player_name + '</td><td>' + row.match_no + '</td><td>' + row.title_1 + '</td><td>' + row.title +'</td></tr>');
+                });
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', status, error);
+            }
+        });
+    });
+});
+</script>
+</head>
+<body>
+    <h2>Filter Data</h2>
+    <form id="filterForm">
+        <label for="filterType">Filter By:</label>
+        <select id="filterType" name="filter_type">
+            <option value="match_no">Match Number</option>
+            <option value="title">title_1</option>
+            <option value="title">title</option>
+        </select>
+        <br>
+        <label for="filterValue">Filter Value:</label>
+        <input type="text" id="filterValue" name="filter_value">
+        <br>
+        <button type="submit">Apply Filter</button>
+    </form>
+
+    <br>
+
+    <table id="dataTable" border="1">
+        <thead>
+            <tr>
+                <th>Player Name</th>
+                <th>Match Number</th>
+                <th>Season</th>
+                <th>Country Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table rows will be dynamically populated -->
+        </tbody>
+    </table>
+</body>
+</html>
