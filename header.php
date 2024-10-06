@@ -279,135 +279,156 @@
 
   <!-- ======= Sidebar ======= -->
   <aside id="sidebar" class="sidebar">
-
     <ul class="sidebar-nav" id="sidebar-nav">
-        <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_player.php">
-          <i class="bi bi-grid"></i>
-          <span>Add Player</span>
+
+<li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-menu-button-wide"></i><span>Player</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-      </li><!-- End Dashboard Nav -->
+        <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="tbl_player.php">
+              <i class="bi bi-circle"></i><span>Add Player</span>
+            </a>
+          </li>
+          <li>
+            <a href="tbl_playerlisting.php">
+              <i class="bi bi-circle"></i><span>Player Listing</span>
+            </a>
+          </li>
+           </ul>
+      </li><!-- End Components Nav -->
+
+        <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-journal-text"></i><span>Country & State</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">  
+          <li>
+            <a href="tbl_country.php">
+              <i class="bi bi-circle"></i><span>Add Country</span>
+            </a>
+          </li>
+          <li>
+            <a href="tbl_countrylisting.php">
+              <i class="bi bi-circle"></i><span>Country Listing</span>
+            </a>
+          </li>
+          <li>
+            <a href="tbl_state.php">
+              <i class="bi bi-circle"></i><span>Add State</span>
+            </a>
+          </li>
+          <li>
+            <a href="tbl_statelisting.php">
+              <i class="bi bi-circle"></i><span>State Listing</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Components Nav -->
+
+       <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-layout-text-window-reverse"></i><span>Season & Series</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="tbl_season.php">
+              <i class="bi bi-circle"></i><span>Add Season</span>
+            </a>
+          </li>
+          <li>
+            <a href="tbl_seasonlisting.php">
+              <i class="bi bi-circle"></i><span>Season Listing</span>
+            </a>
+          </li>
+           <li>
+            <a href="tbl_series.php">
+              <i class="bi bi-circle"></i><span>Add Series</span>
+            </a>
+          </li>
+          <li>
+            <a href="tbl_serieslisting.php">
+              <i class="bi bi-circle"></i><span>Series Listing</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Tables Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-bar-chart"></i><span>Team</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="charts-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="tbl_team.php">
+              <i class="bi bi-circle"></i><span>Add Team</span>
+            </a>
+          </li>
+          <li>
+            <a href="tbl_teamlisting.php">
+              <i class="bi bi-circle"></i><span>Team Listing</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Charts Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#icons-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-gem"></i><span>Schedule</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="icons-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="tbl_schedule.php">
+              <i class="bi bi-circle"></i><span>Add Schedule</span>
+            </a>
+          </li>
+          <li>
+            <a href="tbl_schedulelisting.php">
+              <i class="bi bi-circle"></i><span>Schedule Listing</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Icons Nav -->
 
  <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_playerlisting.php">
-          <i class="bi bi-grid"></i>
-          <span>Player Data</span>
+        <a class="nav-link collapsed" data-bs-target="#icon-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-gem"></i><span>Player Data With Team</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-      </li><!-- End Dashboard Nav -->
+        <ul id="icon-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="tbl_teamselection.php">
+              <i class="bi bi-circle"></i><span>Add Player Team</span>
+            </a>
+          </li>
+          <li>
+            <a href="tbl_teamselection_listing.php">
+              <i class="bi bi-circle"></i><span>Player Team Listing</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Icons Nav -->
 
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_country.php">
-          <i class="bi bi-grid"></i>
-          <span>Add Country</span>
+ <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#chart-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-bar-chart"></i><span>Player Data With CSV</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-      </li><!-- End Dashboard Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_countrylisting.php">
-          <i class="bi bi-grid"></i>
-          <span>Country Data</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_state.php">
-          <i class="bi bi-grid"></i>
-          <span>Add State</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
-
-       <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_statelisting.php">
-          <i class="bi bi-grid"></i>
-          <span>State Data</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_season.php">
-          <i class="bi bi-grid"></i>
-          <span>Add Season</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_seasonlisting.php">
-          <i class="bi bi-grid"></i>
-          <span>Season Data</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_series.php">
-          <i class="bi bi-grid"></i>
-          <span>Add Series </span>
-        </a>
-      </li><!-- End Dashboard Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_serieslisting.php">
-          <i class="bi bi-grid"></i>
-          <span>Series Data</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_team.php">
-          <i class="bi bi-grid"></i>
-          <span>Add Team</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
-
-       <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_teamlisting.php">
-          <i class="bi bi-grid"></i>
-          <span>Team Data</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_schedule.php">
-          <i class="bi bi-grid"></i>
-          <span>Add Schedule Details</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
-
-       <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_schedulelisting.php">
-          <i class="bi bi-grid"></i>
-          <span>Schedule Details Data</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_teamselection.php">
-          <i class="bi bi-grid"></i>
-          <span>Player Entry With Team</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
-
-       <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_teamselection_listing.php">
-          <i class="bi bi-grid"></i>
-          <span>Player Team Listing</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
+        <ul id="chart-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="tbl_teamplayer.php">
+              <i class="bi bi-circle"></i><span>Player Entry With CSV Data</span>
+            </a>
+          </li>
+          <li>
+            <a href="tbl_teamplayer_listing.php">
+              <i class="bi bi-circle"></i><span>Player CSV Data Listing</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Charts Nav -->
 
         
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_teamplayer.php">
-           <i class="bi bi-grid"></i>
-          <span>Player Entry With CSV Data</span>
-        </a>
-      </li><!-- End Profile Page Nav -->
-
-       <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_teamplayer_listing.php">
-           <i class="bi bi-grid"></i>
-          <span>Player CSV Data Listing</span>
-        </a>
-      </li><!-- End Profile Page Nav -->
+    
 
   <li class="nav-item">
         <a class="nav-link collapsed" href="tbl_team_record.php">
@@ -458,7 +479,34 @@
         </a>
       </li><!-- End Profile Page Nav -->
 
-     
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="tbl_filter_data.php">
+           <i class="bi bi-grid"></i>
+          <span>Filter Player Batting & Fielding Record</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+
+       <li class="nav-item">
+        <a class="nav-link collapsed" href="tbl_fielding_batting.php">
+           <i class="bi bi-grid"></i>
+          <span>Filter Player Both Batting & Fielding Record</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+
+       <li class="nav-item">
+        <a class="nav-link collapsed" href="tbl_run-result.php">
+           <i class="bi bi-grid"></i>
+          <span>Total Run Of Player</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+
+       <li class="nav-item">
+        <a class="nav-link collapsed" href="tbl_run_series.php">
+           <i class="bi bi-grid"></i>
+          <span>Player Total Run With Series</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+
       <li class="nav-item">
         <a class="nav-link collapsed" href="pages-login.html">
           <i class="bi bi-box-arrow-in-right"></i>

@@ -36,6 +36,7 @@ if($res){
       <form action="" method="POST" enctype="multipart/form-data">
 <div class="container my-3">
  <h2>Add Country Name</h2>
+ 
   <div class="form-group col-md-12 mt-3">
     <label for="exampleInputPassword1"></label>
     <input type="text" class="form-control" name="title" id="title" placeholder="Country Name" required>

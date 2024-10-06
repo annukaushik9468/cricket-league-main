@@ -25,7 +25,7 @@ include 'header.php';
 // $query = rtrim($query,',');
 // mysql_query($query) or die (mysql_error() );
 
-  $seasonquery = "select * from tbl_season where title = '$title'";
+  $seasonquery = "select * from tbl_season where title = '@$title'";
     $query = mysqli_query($con, $seasonquery);
 
     $seasoncount = mysqli_num_rows($query);
@@ -133,7 +133,7 @@ include 'header.php';
 
 echo '<tr>
 <td><div class="form-check form-check">
-  <input class="form-check-input" type="checkbox" id="inlineCheckbox2" name="player_id[]" value="'.$row["name"] .'">
+  <input class="form-check-input" type="checkbox" id="inlineCheckbox2" name="player_id[]" value="'.$row["id"] .'">
   <label class="form-check-label" for="inlineCheckbox2"></label></td>
 <td>'. $row["id"] . '</td>
 <td>'. $row["name"] . '</td>
