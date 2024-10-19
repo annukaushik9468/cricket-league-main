@@ -1,119 +1,174 @@
+<?php include 'header.php'; ?>
 <?php
 // Database connection
-$conn = new mysqli("localhost", "root", "", "cric_stats");
+$host = 'localhost';  // Your database host
+$username = 'root';    // Your database username
+$password = '';        // Your database password
+$database = 'cric_stats';  // Your database name
 
-// Check for connection error
+$conn = new mysqli($host, $username, $password, $database);
+
+// Check connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Fetch data for dropdowns from tbl_schedule
-function fetchScheduleOptions($conn, $column) {
-    $options = "";
-    $query = "SELECT DISTINCT $column FROM tbl_schedule";
-    $result = $conn->query($query);
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $options .= "<option value='" . $row[$column] . "'>" . $row[$column] . "</option>";
-        }
-    } else {
-        echo "Error fetching options: " . $conn->error;
-    }
-    return $options;
-}
+// Fetch players from tbl_player
+$playersQuery = "SELECT id, name FROM tbl_player";
+$playersResult = $conn->query($playersQuery);
 
-// Handle form submission
+// Fetch series from tbl_series
+$seriesQuery = "SELECT id, title FROM tbl_series";
+$seriesResult = $conn->query($seriesQuery);
+
+// Fetch teams from tbl_team
+$teamsQuery = "SELECT id, title FROM tbl_team"; // Adjust according to your table structure
+$teamsResult = $conn->query($teamsQuery);
+
+$total_runs = 0;
+$player_name = '';
+$selected_team = '';
+$breakdown = []; // To store the breakdown of runs
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $season_id = isset($_POST['season_id']) ? $_POST['season_id'] : null;
-    $series_id = isset($_POST['series_id']) ? $_POST['series_id'] : null;
-    $match_no = isset($_POST['match_no']) ? $_POST['match_no'] : null;
-    $team_1 = isset($_POST['team_1']) ? $_POST['team_1'] : null;
-    $team_2 = isset($_POST['team_2']) ? $_POST['team_2'] : null;
+    // Get the selected player, series, and team from the form
+    $id = $_POST['id'];
+    $series_id = $_POST['series_id'];
+    $selected_team = $_POST['team']; // Get selected team
 
-    // Validate if required fields are selected
-    if ($season_id && $series_id && $match_no && $team_1 && $team_2) {
-        // Fetch batting_team and toss_winner from tbl_matches
-        $query = "SELECT batting_team, toss_winner FROM tbl_matches WHERE team_1 = ? AND team_2 = ?";
-        $stmt = $conn->prepare($query);
-        
-        if ($stmt) {
-            $stmt->bind_param("ii", $team_1, $team_2);
-            $stmt->execute();
-            $stmt->bind_result($batting_team, $toss_winner);
-            $stmt->fetch();
-            $stmt->close();
-
-            if ($batting_team && $toss_winner) {
-                // Fetch player_name and upload_path from tbl_teamplayer and insert data
-                $insert_query = "INSERT INTO tbl_match_data (season_id, series_id, match_no, team_1, team_2, batting_team, toss_winner, player_name, upload_path)
-                                 SELECT ?, ?, ?, ?, ?, ?, ?, player_name, upload_path FROM tbl_match_data WHERE team_1 = ?";
-                $insert_stmt = $conn->prepare($insert_query);
-                
-                if ($insert_stmt) {
-                    $insert_stmt->bind_param("iiiiiiii", $season_id, $series_id, $match_no, $team_1, $team_2, $batting_team, $toss_winner, $batting_team);
-                    $insert_stmt->execute();
-                    $insert_stmt->close();
-
-                    echo "Data inserted successfully!";
-                } else {
-                    echo "Error in insert query: " . $conn->error;
-                }
-            } else {
-                echo "No data found for the selected match.";
-            }
-        } else {
-            echo "Error in fetch query: " . $conn->error;
-        }
-    } else {
-        echo "Please fill all required fields.";
+    // Fetch the player's name
+    $playerQuery = "SELECT name FROM tbl_player WHERE id = ?";
+    $stmtPlayer = $conn->prepare($playerQuery);
+    $stmtPlayer->bind_param("i", $id);
+    $stmtPlayer->execute();
+    $playerResult = $stmtPlayer->get_result();
+    if ($playerResult->num_rows > 0) {
+        $playerData = $playerResult->fetch_assoc();
+        $player_name = $playerData['name'];
     }
+
+    // Fetch the player's record from tbl_team_record against the selected team
+    $teamRecordQuery = "SELECT 
+                            SUM(dot_ball) AS total_dot_balls,
+                            SUM(one_run) AS total_one_runs,
+                            SUM(two_run) AS total_two_runs,
+                            SUM(three_run) AS total_three_runs,
+                            SUM(four_run) AS total_four_runs,
+                            SUM(six_run) AS total_six_runs
+                        FROM tbl_team_record 
+                        WHERE battsman = ? 
+                        AND series_id = ?
+                        AND (team_1 = ? OR team_2 = ?)"; // Include both teams in the condition
+
+    $stmt = $conn->prepare($teamRecordQuery);
+    $stmt->bind_param("iiss", $id, $series_id, $selected_team, $selected_team);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        
+        $total_runs = 
+            $row['total_dot_balls'] * 0 +
+            $row['total_one_runs'] * 1 +
+            $row['total_two_runs'] * 2 +
+            $row['total_three_runs'] * 3 +
+            $row['total_four_runs'] * 4 +
+            $row['total_six_runs'] * 6;
+
+        // Store the breakdown for later display
+        $breakdown = [
+            'total_dot_balls' => $row['total_dot_balls'],
+            'total_one_runs' => $row['total_one_runs'],
+            'total_two_runs' => $row['total_two_runs'],
+            'total_three_runs' => $row['total_three_runs'],
+            'total_four_runs' => $row['total_four_runs'],
+            'total_six_runs' => $row['total_six_runs'],
+        ];
+    } else {
+        echo "No data found for the selected batsman in this series against the selected team.";
+    }
+    
+    $stmt->close();
 }
+
+$conn->close();
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Insert Team Player</title>
+    <title>Fetch Player Runs</title>
+    <style>
+        .clickable {
+            color: blue;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .breakdown {
+            display: none; /* Initially hidden */
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+    </style>
+    <script>
+        function toggleBreakdown() {
+            var breakdown = document.getElementById('breakdown');
+            if (breakdown.style.display === 'none') {
+                breakdown.style.display = 'block';
+            } else {
+                breakdown.style.display = 'none';
+            }
+        }
+    </script>
 </head>
 <body>
-    <form method="post">
-        <label for="season_id">Season ID:</label>
-        <select name="season_id" id="season_id" required>
-            <option value="">Select Season</option>
-            <?= fetchScheduleOptions($conn, 'season_id') ?>
-        </select>
 
-        <label for="series_id">Series ID:</label>
-        <select name="series_id" id="series_id" required>
-            <option value="">Select Series</option>
-            <?= fetchScheduleOptions($conn, 'series_id') ?>
-        </select>
+<h2>Select Player, Series, and Team</h2>
+<form method="post" action="">
+    <label for="player">Player:</label>
+    <select name="id" id="player" class="form-control my-2 mt-2">
+        <?php while($player = $playersResult->fetch_assoc()) { ?>
+            <option value="<?php echo $player['id']; ?>"><?php echo $player['name']; ?></option>
+        <?php } ?>
+    </select>
+ 
+    <label for="series">Series:</label>
+    <select name="series_id" id="series" class="form-control my-2 mt-2">
+        <?php while($series = $seriesResult->fetch_assoc()) { ?>
+            <option value="<?php echo $series['id']; ?>"><?php echo $series['title']; ?></option>
+        <?php } ?>
+    </select>
 
-        <label for="match_no">Match No:</label>
-        <select name="match_no" id="match_no" required>
-            <option value="">Select Match</option>
-            <?= fetchScheduleOptions($conn, 'match_no') ?>
-        </select>
+    <label for="team">Team:</label>
+    <select name="team" id="team" class="form-control my-2 mt-2">
+        <?php while($team = $teamsResult->fetch_assoc()) { ?>
+            <option value="<?php echo $team['id']; ?>"><?php echo $team['title']; ?></option>
+        <?php } ?>
+    </select>
+    
+    <input type="submit" value="Submit" class="btn btn-success mt-2">
+</form>
 
-        <label for="team_1">Team 1:</label>
-        <select name="team_1" id="team_1" required>
-            <option value="">Select Team 1</option>
-            <?= fetchScheduleOptions($conn, 'team_1') ?>
-        </select>
+<?php if ($total_runs > 0): ?>
+    <h3 class="my-2">
+        Total runs for <?php echo $player_name; ?> against <?php echo $selected_team; ?>: 
+        <span class="clickable" onclick="toggleBreakdown()"><?php echo $total_runs; ?></span>
+    </h3>
+    <div id="breakdown" class="breakdown">
+        <h4>Breakdown:</h4>
+        <ul>
+            <li>Dot Balls: <?php echo $breakdown['total_dot_balls']; ?></li>
+            <li>One Runs: <?php echo $breakdown['total_one_runs']; ?></li>
+            <li>Two Runs: <?php echo $breakdown['total_two_runs']; ?></li>
+            <li>Three Runs: <?php echo $breakdown['total_three_runs']; ?></li>
+            <li>Four Runs: <?php echo $breakdown['total_four_runs']; ?></li>
+            <li>Six Runs: <?php echo $breakdown['total_six_runs']; ?></li>
+        </ul>
+    </div>
+<?php endif; ?>
 
-        <label for="team_2">Team 2:</label>
-        <select name="team_2" id="team_2" required>
-            <option value="">Select Team 2</option>
-            <?= fetchScheduleOptions($conn, 'team_2') ?>
-        </select>
-
-        <input type="submit" value="Submit">
-    </form>
 </body>
 </html>
-
-<?php
-// Close the database connection
-$conn->close();
-?>
+<?php include 'footer.php'; ?>

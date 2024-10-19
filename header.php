@@ -501,9 +501,16 @@
       </li><!-- End Profile Page Nav -->
 
        <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_run_series.php">
+        <a class="nav-link collapsed" href="tbl_team_run.php">
            <i class="bi bi-grid"></i>
           <span>Player Total Run With Series</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="tbl_run_series.php">
+           <i class="bi bi-grid"></i>
+          <span>Player Total Run With Series & Team</span>
         </a>
       </li><!-- End Profile Page Nav -->
 
