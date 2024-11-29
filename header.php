@@ -370,6 +370,16 @@
               <i class="bi bi-circle"></i><span>Team Listing</span>
             </a>
           </li>
+           <li>
+            <a href="tbl_stadium.php">
+              <i class="bi bi-circle"></i><span>Add Stadium</span>
+            </a>
+          </li>
+          <li>
+          <a href="tbl_stadium_listing.php">
+              <i class="bi bi-circle"></i><span>Stadium Listing</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Charts Nav -->
 
@@ -386,6 +396,11 @@
           <li>
             <a href="tbl_schedulelisting.php">
               <i class="bi bi-circle"></i><span>Schedule Listing</span>
+            </a>
+          </li>
+           <li>
+            <a href="tbl_archived_schedule.php">
+              <i class="bi bi-circle"></i><span>Archived Schedule Listing</span>
             </a>
           </li>
         </ul>
@@ -429,7 +444,12 @@
 
         
     
-
+<li class="nav-item">
+        <a class="nav-link collapsed" href="tbl_match_result.php">
+           <i class="bi bi-grid"></i>
+          <span>Match Toss & Win Result</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
   <li class="nav-item">
         <a class="nav-link collapsed" href="tbl_team_record.php">
           <i class="bi bi-grid"></i>
@@ -465,12 +485,7 @@
         </a>
       </li><!-- End Profile Page Nav -->
 
-<li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_match_result.php">
-           <i class="bi bi-grid"></i>
-          <span>Match Toss & Win Result</span>
-        </a>
-      </li><!-- End Profile Page Nav -->
+
 
       <li class="nav-item">
         <a class="nav-link collapsed" href="tbl_toss_filter_data.php">
@@ -511,6 +526,27 @@
         <a class="nav-link collapsed" href="tbl_run_series.php">
            <i class="bi bi-grid"></i>
           <span>Player Total Run With Series & Team</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+
+          <li class="nav-item">
+        <a class="nav-link collapsed" href="tbl_total_run.php">
+           <i class="bi bi-grid"></i>
+          <span>Player Total Run With Series</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="tbl_mutiple_data.php">
+           <i class="bi bi-grid"></i>
+          <span>Player data with Run</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+
+       <li class="nav-item">
+        <a class="nav-link collapsed" href="tbl_playerVSplayer.php">
+           <i class="bi bi-grid"></i>
+          <span>Player VS Player data </span>
         </a>
       </li><!-- End Profile Page Nav -->
 

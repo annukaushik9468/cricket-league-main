@@ -13,24 +13,20 @@ include 'dbconnection.php';
     <div class="col-md-12">
       <div class="card">
         <div class="card-header">
-          <h4 class="text-center">Fetching the Data Of State</h4>
+          <h4 class="text-center">Fetching the Data Of Stadium</h4>
         </div>
         <div class="card-body">
-          <?php
-          $conn = mysqli_connect("localhost", "root", "", "cric_stats");
 
-          // Fetching data in descending order by ID
-          $query = "SELECT a.id, a.title, b.title AS country_title 
-                    FROM tbl_state a
-                    LEFT JOIN tbl_country b ON a.country_id = b.id
-                    ORDER BY a.id DESC";
+          <?php
+          $conn =  mysqli_connect("localhost", "root", "", "cric_stats");
+          // Fetch data in descending order by ID
+          $query = "SELECT * FROM tbl_stadium ORDER BY id DESC";
           $query_run = mysqli_query($conn, $query);
           ?>
           <table class="table table-bordered table-striped">
             <thead class="thead-dark">
               <tr>
                 <th>ID</th>
-                <th>Country</th>
                 <th>Title</th>
                 <th>Operations</th>
               </tr>
@@ -38,22 +34,21 @@ include 'dbconnection.php';
             <tbody>
               <?php
               if(mysqli_num_rows($query_run) > 0) {
-                  while($row = mysqli_fetch_array($query_run)) {
+                  foreach($query_run as $row) {
               ?>
               <tr>
                 <td><?php echo $row['id']; ?></td>
-                <td><?php echo $row['country_title']; ?></td>
                 <td><?php echo $row['title']; ?></td>
                   <td>
     <!-- Right tick for Edit with tooltip -->
-    <a href="update2.php?id=<?php echo $row['id']; ?>" 
+    <a href="update9.php?id=<?php echo $row['id']; ?>" 
        title="Edit" 
        style="cursor: pointer; font-size: 20px; color: green; text-decoration: none;">
         &#10003;
     </a>
 
     <!-- Wrong tick for Delete with tooltip -->
-    <a href="delete2.php?id=<?php echo $row['id']; ?>" 
+    <a href="delete9.php?id=<?php echo $row['id']; ?>" 
        title="Delete" 
        style="cursor: pointer; font-size: 20px; color: red; text-decoration: none;">
         &#10007;
@@ -90,3 +85,5 @@ include 'dbconnection.php';
 
 
 <?php include 'footer.php'; ?>
+</body>
+</html>

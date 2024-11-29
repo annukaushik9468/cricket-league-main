@@ -6,14 +6,13 @@ include 'header.php';
 if (isset($_POST['update_page'])) {
     if (count($_POST) > 0) {
         // Update query
-        $sql = "UPDATE tbl_series 
+        $sql = "UPDATE tbl_stadium 
                 SET title = '" . $_POST['title'] . "', 
-                    slug = '" . $_POST['slug'] . "' 
                 WHERE id = '" . $_GET['id'] . "'";
         
         if (mysqli_query($con, $sql)) {
             // Redirect to tbl_serieslisting.php after successful update
-            header('Location: tbl_serieslisting.php');
+            header('Location: tbl_stadium_listing.php');
             exit(); // Stop further script execution
         }
 
@@ -22,7 +21,7 @@ if (isset($_POST['update_page'])) {
 }
 
 // Fetch the record to be edited
-$result = mysqli_query($con, "SELECT * FROM tbl_series WHERE id = '" . $_GET['id'] . "'");
+$result = mysqli_query($con, "SELECT * FROM tbl_stadium WHERE id = '" . $_GET['id'] . "'");
 $row = mysqli_fetch_array($result);
 ?>
 
@@ -31,11 +30,6 @@ $row = mysqli_fetch_array($result);
     <div class="col-md-12">
         <label for="exampleInputPassword1">Title</label>
         <input type="text" class="form-control" name="title" value="<?php echo $row['title']; ?>" required>
-    </div>
-
-    <div class="col-md-12">
-        <label for="exampleInputPassword1">Slug</label>
-        <input type="text" class="form-control" name="slug" value="<?php echo $row['slug']; ?>" required>
     </div>
 
     <button type="submit" name="update_page" class="btn btn-primary mt-4 my-8" style="height:50px;">Update</button>

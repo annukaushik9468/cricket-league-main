@@ -43,11 +43,15 @@ if (isset($_POST['submit'])) {
 }
 
 // Fetch already selected players
-$query = "SELECT player_team1, player_team2 FROM tbl_teamselection WHERE series_id = ? AND season_id = ? AND team_1 = ? AND team_2 = ? AND match_no = ?";
+$query = "SELECT player_team1, player_team2 FROM tbl_teamselection WHERE series_id = ? AND season_id = ? AND match_no = ?";
 $stmt = $con->prepare($query);
-$stmt->bind_param("iiiss", $_POST['series_id'], $_POST['season_id'], $_POST['team_1'], $_POST['team_2'], $_POST['match_no']);
+$stmt->bind_param("iii", $_POST['series_id'], $_POST['season_id'], $_POST['match_no']);
 $stmt->execute();
 $result = $stmt->get_result();
+
+$selected_team_1_players = [];
+$selected_team_2_players = [];
+
 while ($row = $result->fetch_assoc()) {
     if (!empty($row['player_team1'])) {
         $selected_team_1_players[] = $row['player_team1'];
@@ -57,6 +61,8 @@ while ($row = $result->fetch_assoc()) {
     }
 }
 $stmt->close();
+
+
 ?>
 
 <section class="section dashboard">
@@ -138,61 +144,61 @@ $stmt->close();
                 </div>
             </div>
 
-            <!-- Player Selection for Team 1 -->
-            <h4>Players for Team 1</h4>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Select</th>
-                        <th>ID</th>
-                        <th>Player Name</th>
-                    </tr>
-                </thead>
-                <tbody id="team1-players">
-                    <?php
-                    $sql = "SELECT * FROM tbl_player";
-                    $result = mysqli_query($con, $sql);
-                    while ($row = mysqli_fetch_assoc($result)) {
-                        $player_name = $row["name"];
-                        $player_id = $row["id"];
-                        $disabled = in_array($player_id, $selected_team_1_players) || in_array($player_id, $selected_team_2_players) ? 'disabled' : '';
-                        echo '<tr>
-                                <td><input class="form-check-input" type="checkbox" name="team_1_players[]" value="' . $player_id . '" data-name="' . $player_name . '" ' . $disabled . '></td>
-                                <td>' . $player_id . '</td>
-                                <td>' . $player_name . '</td>
-                            </tr>';
-                    }
-                    ?>
-                </tbody>
-            </table>
+           <h4>Players for Team 1</h4>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Select</th>
+            <th>ID</th>
+            <th>Player Name</th>
+        </tr>
+    </thead>
+    <tbody id="team1-players">
+        <?php
+        $sql = "SELECT * FROM tbl_player";
+        $result = mysqli_query($con, $sql);
+        while ($row = mysqli_fetch_assoc($result)) {
+            $player_name = $row["name"];
+            $player_id = $row["id"];
+          $disabled = in_array($player_id, $selected_team_1_players) || in_array($player_id, $selected_team_2_players) ? 'disabled' : '';
+echo '<tr>
+        <td><input class="form-check-input" type="checkbox" name="team_1_players[]" value="' . $player_id . '" data-name="' . $player_name . '" ' . $disabled . '></td>
+        <td>' . $player_id . '</td>
+        <td>' . $player_name . '</td>
+      </tr>';
 
-            <!-- Player Selection for Team 2 -->
+        }
+        ?>
+    </tbody>
+</table>
+
             <h4>Players for Team 2</h4>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Select</th>
-                        <th>ID</th>
-                        <th>Player Name</th>
-                    </tr>
-                </thead>
-                <tbody id="team2-players">
-                    <?php
-                    $sql = "SELECT * FROM tbl_player";
-                    $result = mysqli_query($con, $sql);
-                    while ($row = mysqli_fetch_assoc($result)) {
-                        $player_name = $row["name"];
-                        $player_id = $row["id"];
-                        $disabled = in_array($player_id, $selected_team_1_players) || in_array($player_id, $selected_team_2_players) ? 'disabled' : '';
-                        echo '<tr>
-                                <td><input class="form-check-input" type="checkbox" name="team_2_players[]" value="' . $player_id . '" data-name="' . $player_name . '" ' . $disabled . '></td>
-                                <td>' . $player_id . '</td>
-                                <td>' . $player_name . '</td>
-                            </tr>';
-                    }
-                    ?>
-                </tbody>
-            </table>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Select</th>
+            <th>ID</th>
+            <th>Player Name</th>
+        </tr>
+    </thead>
+    <tbody id="team2-players">
+        <?php
+        $sql = "SELECT * FROM tbl_player";
+        $result = mysqli_query($con, $sql);
+        while ($row = mysqli_fetch_assoc($result)) {
+            $player_name = $row["name"];
+            $player_id = $row["id"];
+            $disabled = in_array($player_id, $selected_team_1_players) || in_array($player_id, $selected_team_2_players) ? 'disabled' : '';
+            echo '<tr>
+                    <td><input class="form-check-input" type="checkbox" name="team_2_players[]" value="' . $player_id . '" data-name="' . $player_name . '" ' . $disabled . '></td>
+                    <td>' . $player_id . '</td>
+                    <td>' . $player_name . '</td>
+                  </tr>';
+        }
+        ?>
+    </tbody>
+</table>
+
 
             <button type="submit" name="submit" class="btn btn-primary col-md-2 mt-4">Submit</button>
         </div>
@@ -203,30 +209,37 @@ $stmt->close();
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Function to update player visibility
     function updatePlayerVisibility() {
-        let selectedTeam1Players = Array.from(document.querySelectorAll('input[name="team_1_players[]"]:checked')).map(checkbox => checkbox.dataset.name);
-        let selectedTeam2Players = Array.from(document.querySelectorAll('input[name="team_2_players[]"]:checked')).map(checkbox => checkbox.dataset.name);
+        let selectedTeam1Players = Array.from(document.querySelectorAll('input[name="team_1_players[]"]:checked')).map(checkbox => checkbox.value);
+        let selectedTeam2Players = Array.from(document.querySelectorAll('input[name="team_2_players[]"]:checked')).map(checkbox => checkbox.value);
 
-        // Hide players in Team 2 that are selected in Team 1
+        // Disable players in Team 2 if selected in Team 1
         document.querySelectorAll('#team2-players input').forEach(checkbox => {
-            checkbox.closest('tr').style.display = selectedTeam1Players.includes(checkbox.dataset.name) ? 'none' : '';
+            checkbox.disabled = selectedTeam1Players.includes(checkbox.value) || checkbox.checked;
         });
 
-        // Hide players in Team 1 that are selected in Team 2
+        // Disable players in Team 1 if selected in Team 2
         document.querySelectorAll('#team1-players input').forEach(checkbox => {
-            checkbox.closest('tr').style.display = selectedTeam2Players.includes(checkbox.dataset.name) ? 'none' : '';
+            checkbox.disabled = selectedTeam2Players.includes(checkbox.value) || checkbox.checked;
         });
     }
 
-    // Initial update
     updatePlayerVisibility();
 
-    // Attach change event listeners to checkboxes
     document.querySelectorAll('input[name="team_1_players[]"], input[name="team_2_players[]"]').forEach(checkbox => {
         checkbox.addEventListener('change', updatePlayerVisibility);
     });
 });
+foreach ($team_1_players as $player_team1) {
+    if (in_array($player_team1, $selected_team_1_players) || in_array($player_team1, $selected_team_2_players)) {
+        continue; // Skip already selected players
+    }
+    $stmt->bind_param("iissss", $series_id, $season_id, $team_1, $team_2, $match_no, $player_team1);
+    if (!$stmt->execute()) {
+        echo '<script>alert("Error inserting Team 1 player: ' . $stmt->error . '");</script>';
+    }
+}
+
 </script>
 
 <?php

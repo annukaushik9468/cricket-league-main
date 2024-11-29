@@ -1,211 +1,250 @@
 <?php
-include 'dbconnection.php';
 include 'header.php';
+$host = 'localhost';
+$user = 'root';
+$pass = '';
+$dbname = 'cric_stats';
+$conn = new mysqli($host, $user, $pass, $dbname);
 
-// Check if the form is submitted
-if (isset($_POST['submit'])) {
-    $season_id = mysqli_real_escape_string($con, $_POST['season_id']);
-    $series_id = mysqli_real_escape_string($con, $_POST['series_id']);
-    $team_1 = mysqli_real_escape_string($con, $_POST['team_1']);
-    $team_2 = mysqli_real_escape_string($con, $_POST['team_2']);
-    $match_no = mysqli_real_escape_string($con, $_POST['match_no']);
-    $player_ids = $_POST['player_id'];
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
 
-    // Fetch IDs for team_1 and team_2 from tbl_team
-    $team_id_query = "SELECT id FROM tbl_team WHERE team_name = '$team_1' OR team_name = '$team_2'";
-    $team_id_result = mysqli_query($con, $team_id_query);
-    if (!$team_id_result) {
-        die('Error executing query: ' . mysqli_error($con));
+$player_query = "SELECT id, name FROM tbl_player";
+$series_query = "SELECT id, title FROM tbl_series";
+$players = $conn->query($player_query);
+$series = $conn->query($series_query);
+
+$records = null;
+$player_id = null;
+$series_id = null;
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['player_id']) && isset($_POST['series_id'])) {
+        $player_id = $_POST['player_id'];
+        $series_id = $_POST['series_id'];
+
+        $record_query = "
+            SELECT 
+                s.title AS season_title, 
+                COUNT(DISTINCT tr.match_no) AS total_matches,
+                SUM(tr.four_run) AS four_runs,
+                SUM(tr.six_run) AS six_runs,
+                SUM(tr.one_run + tr.two_run * 2 + tr.three_run * 3 + tr.four_run * 4 + tr.six_run * 6) AS total_runs,
+                SUM(tr.dot_ball + tr.one_run + tr.two_run + tr.three_run + tr.four_run + tr.six_run) AS total_balls,
+                SUM(CASE WHEN tr.wicket > 0 THEN 1 ELSE 0 END) AS total_outs,
+                SUM(CASE WHEN tr.wicket = 0 THEN 1 ELSE 0 END) AS total_not_outs
+            FROM tbl_team_record tr
+            JOIN tbl_player p ON tr.bowler = p.id
+            JOIN tbl_season s ON tr.season_id = s.id
+            WHERE tr.battsman = $player_id AND tr.series_id = $series_id
+            GROUP BY s.title
+        ";
+
+        $records = $conn->query($record_query);
     }
 
-    $team_ids = [];
-    while ($row = mysqli_fetch_assoc($team_id_result)) {
-        $team_ids[] = $row['id'];
-    }
+    if (isset($_POST['match_no']) && isset($_POST['player_id'])) {
+        $match_no = $_POST['match_no'];
+        $player_id = $_POST['player_id'];
 
-    // Ensure we have two teams' IDs
-    if (count($team_ids) < 2) {
-        die('Unable to find IDs for both teams.');
-    }
+        $match_details_query = "
+            SELECT 
+                tr.match_no, 
+                p.name AS bowler, 
+                t1.title AS team_1, 
+                t2.title AS team_2,
+                SUM(tr.dot_ball) AS dot_ball,
+                SUM(tr.one_run) AS one_run, 
+                SUM(tr.two_run) AS two_run, 
+                SUM(tr.three_run) AS three_run, 
+                SUM(tr.four_run) AS four_run, 
+                SUM(tr.six_run) AS six_run, 
+                (SUM(tr.one_run) + SUM(tr.two_run) * 2 + SUM(tr.three_run) * 3 + SUM(tr.four_run) * 4 + SUM(tr.six_run) * 6) AS total_runs,
+                (SUM(tr.dot_ball) + SUM(tr.one_run) + SUM(tr.two_run) + SUM(tr.three_run) + SUM(tr.four_run) + SUM(tr.six_run)) AS total_balls,
+                MAX(tr.wicket) AS is_out
+            FROM tbl_team_record tr
+            JOIN tbl_player p ON tr.bowler = p.id
+            JOIN tbl_team t1 ON tr.team_1 = t1.id
+            JOIN tbl_team t2 ON tr.team_2 = t2.id
+            WHERE tr.match_no = $match_no AND tr.battsman = $player_id
+            GROUP BY tr.match_no, p.name, t1.title, t2.title
+        ";
 
-    $batting_team_id = $team_ids[0]; // Assuming team_1 is the batting team
-    $toss_winner_id = $team_ids[1]; // Assuming team_2 is the toss winner
-
-    // Handle file upload
-    if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == UPLOAD_ERR_OK) {
-        $file_tmp_name = $_FILES['csv_file']['tmp_name'];
-        $file_name = $_FILES['csv_file']['name'];
-        $upload_path = 'uploads/' . basename($file_name);
-        if (!move_uploaded_file($file_tmp_name, $upload_path)) {
-            die('Error uploading file');
-        }
-    } else {
-        $upload_path = ''; // Handle the case where file upload fails
-    }
-
-    // Insert data into tbl_match_data
-    foreach ($player_ids as $player_id) {
-        $insertquery = "INSERT INTO tbl_match_data (season_id, series_id, team_1, team_2, match_no, upload_path, batting_team, toss_winner, player_name) VALUES ('$season_id', '$series_id', '$team_1', '$team_2', '$match_no', '$upload_path', '$batting_team_id', '$toss_winner_id', '$player_id')";
-        $iquery = mysqli_query($con, $insertquery);
-        if (!$iquery) {
-            die('Error inserting data: ' . mysqli_error($con));
-        }
-    }
-
-    if ($iquery) {
-        ?>
-        <script>
-            alert("Data inserted successfully");
-        </script>
-        <?php
-    } else {
-        ?>
-        <script>
-            alert("Data insertion failed");
-        </script>
-        <?php
+        $match_details = $conn->query($match_details_query);
     }
 }
+
 ?>
 
-<section class="section dashboard">
-    <div class="row">
-        <div class="container my-3">
-            <form action="" method="POST" id="check" autocomplete="off" enctype="multipart/form-data">
-                <div class="container">
-                    <h2 class="text-center">Data</h2>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Series Id</th>
-                                <th>Season</th>
-                                <th>Team 1</th>
-                                <th>Team 2</th>
-                                <th>Match No</th>
-                                <th>Player Name</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <select class="col-md-12 mt-3 mb-3 form-control" name="series_id">
-                                        <option selected>Series Id</option>
-                                        <?php
-                                        $series_query = mysqli_query($con, "SELECT * FROM tbl_schedule");
-                                        if (!$series_query) {
-                                            die('Error executing query: ' . mysqli_error($con));
-                                        }
-                                        while ($s = mysqli_fetch_assoc($series_query)) {
-                                            ?>
-                                            <option value="<?php echo $s['series_id'] ?>"><?php echo $s['series_id'] ?></option>
-                                            <?php
-                                        }
-                                        ?>
-                                    </select>
-                                </td>
-                                <td>
-                                    <select class="col-md-8 form-control" name="season_id">
-                                        <option selected>Season</option>
-                                        <?php
-                                        $season_query = mysqli_query($con, "SELECT * FROM tbl_schedule");
-                                        if (!$season_query) {
-                                            die('Error executing query: ' . mysqli_error($con));
-                                        }
-                                        while ($s = mysqli_fetch_assoc($season_query)) {
-                                            ?>
-                                            <option value="<?php echo $s['season_id'] ?>"><?php echo $s['season_id'] ?></option>
-                                            <?php
-                                        }
-                                        ?>
-                                    </select>
-                                </td>
-                                <td>
-                                    <select class="col-md-8 form-control" name="team_1">
-                                        <option selected>Team 1</option>
-                                        <?php
-                                        $team_query = mysqli_query($con, "SELECT DISTINCT team_name FROM tbl_team");
-                                        if (!$team_query) {
-                                            die('Error executing query: ' . mysqli_error($con));
-                                        }
-                                        while ($t = mysqli_fetch_assoc($team_query)) {
-                                            ?>
-                                            <option value="<?php echo $t['team_name'] ?>"><?php echo $t['team_name'] ?></option>
-                                            <?php
-                                        }
-                                        ?>
-                                    </select>
-                                </td>
-                                <td>
-                                    <select class="col-md-8 form-control" name="team_2">
-                                        <option selected>Team 2</option>
-                                        <?php
-                                        $team_query = mysqli_query($con, "SELECT DISTINCT team_name FROM tbl_team");
-                                        if (!$team_query) {
-                                            die('Error executing query: ' . mysqli_error($con));
-                                        }
-                                        while ($t = mysqli_fetch_assoc($team_query)) {
-                                            ?>
-                                            <option value="<?php echo $t['team_name'] ?>"><?php echo $t['team_name'] ?></option>
-                                            <?php
-                                        }
-                                        ?>
-                                    </select>
-                                </td>
-                                <td>
-                                    <select class="col-md-8 form-control" name="match_no">
-                                        <option selected>Match No</option>
-                                        <?php
-                                        $match_query = mysqli_query($con, "SELECT DISTINCT match_no FROM tbl_schedule");
-                                        if (!$match_query) {
-                                            die('Error executing query: ' . mysqli_error($con));
-                                        }
-                                        while ($s = mysqli_fetch_assoc($match_query)) {
-                                            ?>
-                                            <option value="<?php echo $s['match_no'] ?>"><?php echo $s['match_no'] ?></option>
-                                            <?php
-                                        }
-                                        ?>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="file" name="csv_file" class="form-control">
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Player Performance by Series</title>
+    <style type="text/css">
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
+        form { margin-bottom: 30px; padding: 15px; background-color: #ffffff; border: 1px solid #ddd; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        form label { display: block; margin-bottom: 5px; font-weight: bold; }
+        form select { width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; }
+        form button { padding: 10px 20px; background-color: #28a745; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+        form button:hover { background-color: #218838; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table, th, td { border: 1px solid #ddd; }
+        table th, table td { padding: 10px; text-align: center; }
+        table thead { background-color: #f8f9fa; }
+        table th { font-weight: bold; background-color: #007bff; color: #ffffff; }
+        table tr:nth-child(even) { background-color: #f2f2f2; }
+        table tr:hover { background-color: #d1ecf1; }
+        /* Modal style */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 1000; }
+        .modal-content { margin: 15% auto; background-color: #fff; padding: 20px; border-radius: 5px; width: 80%; }
+        .close-btn { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover, .close-btn:focus { color: black; text-decoration: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Select Player and Series</h2>
+    <form method="POST" action="">
+        <label for="player">Player:</label>
+        <select name="player_id" id="player" required>
+            <option value="">Select Player</option>
+            <?php while ($row = $players->fetch_assoc()) { ?>
+                <option value="<?= $row['id']; ?>" <?= (isset($player_id) && $player_id == $row['id']) ? 'selected' : ''; ?>><?= $row['name']; ?></option>
+            <?php } ?>
+        </select>
 
-                    <table class="table" id="mytable">
-                        <thead>
-                            <tr>
-                                <th>Select</th>
-                                <th>ID</th>
-                                <th>Player Name</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $sql = "SELECT * FROM tbl_player";
-                            $result = mysqli_query($con, $sql);
-                            if (!$result) {
-                                die('Error executing query: ' . mysqli_error($con));
-                            }
-                            while ($row = mysqli_fetch_assoc($result)) {
-                                echo '<tr>
-                                    <td><input type="checkbox" name="player_id[]" value="' . $row["name"] . '"></td>
-                                    <td>' . $row["id"] . '</td>
-                                    <td>' . $row["name"] . '</td>
-                                </tr>';
-                            }
-                            ?>
-                        </tbody>
-                    </table>
-                </div>
-                <button type="submit" name="submit" class="btn btn-primary col-md-2 mt-4">Submit</button>
-            </form>
-        </div>
+        <label for="series">Series:</label>
+        <select name="series_id" id="series" required>
+            <option value="">Select Series</option>
+            <?php while ($row = $series->fetch_assoc()) { ?>
+                <option value="<?= $row['id']; ?>" <?= (isset($series_id) && $series_id == $row['id']) ? 'selected' : ''; ?>><?= $row['title']; ?></option>
+            <?php } ?>
+        </select>
+
+        <button type="submit">Fetch Performance</button>
+    </form>
+
+    <?php if (isset($records) && $records->num_rows > 0) { ?>
+  <h3>Series Performance Details</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Season</th>
+            <th>Total Matches</th>
+            <th>Four Runs</th>
+            <th>Six Runs</th>
+            <th>Total Runs</th>
+            <th>Total Balls</th>
+            <th>Out</th>
+            <th>Not Out</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php while ($row = $records->fetch_assoc()) { ?>
+            <tr>
+                <td><?= $row['season_title']; ?></td>
+                <td>
+                    <a href="" class="match-link" data-match-no="<?= $row['total_matches']; ?>">
+                        <?= $row['total_matches']; ?>
+                    </a>
+                </td>
+                <td><?= $row['four_runs']; ?></td>
+                <td><?= $row['six_runs']; ?></td>
+                <td><?= $row['total_runs']; ?></td>
+                <td><?= $row['total_balls']; ?></td>
+                <td><?= $row['total_outs']; ?></td>
+                <td><?= $row['total_not_outs']; ?></td>
+            </tr>
+        <?php } ?>
+    </tbody>
+</table>
+
+    <?php } ?>
+
+
+  <!-- Existing content remains -->
+<!-- Add a modal for match details -->
+<div id="matchDetailsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h3>Match Details</h3>
+        <table id="matchDetailsTable">
+            <thead>
+                <tr>
+                    <th>Match No</th>
+                    <th>Bowler</th>
+                    <th>Team 1</th>
+                    <th>Team 2</th>
+                    <th>Dot Balls</th>
+                    <th>One Runs</th>
+                    <th>Two Runs</th>
+                    <th>Three Runs</th>
+                    <th>Four Runs</th>
+                    <th>Six Runs</th>
+                    <th>Total Runs</th>
+                    <th>Total Balls</th>
+                    <th>Out</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
-</section>
+</div>
 
-<?php
-include 'footer.php';
-?>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('matchDetailsModal');
+    const closeBtn = document.querySelector('.close-btn');
+
+    document.querySelectorAll('.match-link').forEach(link => {
+        link.addEventListener('click', event => {
+            event.preventDefault();
+            const matchNo = event.target.getAttribute('data-match-no');
+
+            // Fetch match details using AJAX
+            fetch(`fetch_match_details.php?match_no=${matchNo}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector('#matchDetailsTable tbody');
+                    tableBody.innerHTML = '';
+                    data.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${row.match_no}</td>
+                            <td>${row.bowler}</td>
+                            <td>${row.team_1}</td>
+                            <td>${row.team_2}</td>
+                            <td>${row.dot_ball}</td>
+                            <td>${row.one_run}</td>
+                            <td>${row.two_run}</td>
+                            <td>${row.three_run}</td>
+                            <td>${row.four_run}</td>
+                            <td>${row.six_run}</td>
+                            <td>${row.total_runs}</td>
+                            <td>${row.total_balls}</td>
+                            <td>${row.is_out}</td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                    modal.style.display = 'block';
+                });
+        });
+    });
+
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', event => {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    });
+});
+</script>
+
+
+
+
+</body>
+</html>
