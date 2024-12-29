@@ -8,7 +8,8 @@ if (isset($_POST['update_page'])) {
         // Update query
         $sql = "UPDATE tbl_team 
                 SET title = '" . $_POST['title'] . "', 
-                    slug = '" . $_POST['slug'] . "' 
+                    slug = '" . $_POST['slug'] . "', 
+                    series_id = '" . $_POST['series_id'] . "' 
                 WHERE id = '" . $_GET['id'] . "'";
 
         if (mysqli_query($con, $sql)) {
@@ -24,21 +25,37 @@ if (isset($_POST['update_page'])) {
 // Fetch the record to be edited
 $result = mysqli_query($con, "SELECT * FROM tbl_team WHERE id = '" . $_GET['id'] . "'");
 $row = mysqli_fetch_array($result);
+
+// Fetch available series for the dropdown
+$series_query = mysqli_query($con, "SELECT id, title FROM tbl_series");
 ?>
 
 <!-- Update Form -->
 <form action="" method="POST" enctype="multipart/form-data">
     <div class="col-md-12">
-        <label for="exampleInputPassword1">Title</label>
+        <label for="title">Title</label>
         <input type="text" class="form-control" name="title" value="<?php echo $row['title']; ?>" required>
     </div>
 
     <div class="col-md-12">
-        <label for="exampleInputPassword1">Slug</label>
+        <label for="slug">Slug</label>
         <input type="text" class="form-control" name="slug" value="<?php echo $row['slug']; ?>" required>
     </div>
 
-    <button type="submit" name="update_page" class="btn btn-primary mt-4 my-8" style="height:50px;">Update</button>
+    <div class="col-md-12">
+        <label for="series_id">Series</label>
+        <select class="form-control" name="series_id" required>
+            <option value="">Select Series</option>
+            <?php
+            while ($series = mysqli_fetch_assoc($series_query)) {
+                $selected = $row['series_id'] == $series['id'] ? 'selected' : '';
+                echo "<option value='" . $series['id'] . "' $selected>" . $series['title'] . "</option>";
+            }
+            ?>
+        </select>
+    </div>
+
+    <button type="submit" name="update_page" class="btn btn-primary mt-4" style="height:50px;">Update</button>
 </form> 
 
 <?php

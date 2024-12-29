@@ -1,93 +1,179 @@
 <?php
-// Database connection
-$conn = new mysqli("localhost", "root", "", "cric_stats");
+include 'dbconnection.php';
+include 'header.php';
+?>
 
-// Check for connection errors
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+<main id="main" class="main">
+    <div class="pagetitle"></div><!-- End Page Title -->
+
+    <section class="section dashboard">
+        <div class="row">
+            <?php
+            // Database connection
+            $conn = new mysqli('localhost', 'root', '', 'cric_stats');
+            if ($conn->connect_error) {
+                die("Connection failed: " . $conn->connect_error);
+            }
+
+            // Fetch data for dropdowns
+            $toss = $conn->query("SELECT id, toss_winner FROM tbl_matches");
+            $seasons = $conn->query("SELECT id, title FROM tbl_season");
+            $series = $conn->query("SELECT id, title FROM tbl_series");
+            $stadium = $conn->query("SELECT id, title FROM tbl_stadium");
+
+            // Fetch team matches for combined dropdown
+            $matches = $conn->query("SELECT 
+                                        m.id AS match_id, 
+                                        t1.title AS team1, 
+                                        t2.title AS team2 
+                                      FROM tbl_matches m 
+                                      JOIN tbl_team t1 ON m.team_1 = t1.id 
+                                      JOIN tbl_team t2 ON m.team_2 = t2.id");
+            ?>
+            
+            <form action="" method="post" enctype="multipart/form-data">
+                <!-- Toss Winner Dropdown -->
+               
+                <label for="season_id">Season ID:</label>
+                <select name="season_id" id="season_id" class="form-control">
+                    <?php while($row = $seasons->fetch_assoc()): ?>
+                        <option value="<?php echo $row['id']; ?>"><?php echo $row['title']; ?></option>
+                    <?php endwhile; ?>
+                </select><br>
+
+                <label for="series_id">Series ID:</label>
+                <select name="series_id" id="series_id" class="form-control">
+                    <?php while($row = $series->fetch_assoc()): ?>
+                        <option value="<?php echo $row['id']; ?>"><?php echo $row['title']; ?></option>
+                    <?php endwhile; ?>
+                </select><br>
+
+                <label for="stadium_id">Stadium ID:</label>
+                <select name="stadium_id" id="stadium_id" class="form-control">
+                    <?php while($row = $stadium->fetch_assoc()): ?>
+                        <option value="<?php echo $row['id']; ?>"><?php echo $row['title']; ?></option>
+                    <?php endwhile; ?>
+                </select><br>
+
+                <label for="team_match">Teams:</label>
+                <select name="team_match" id="team_match" class="form-control">
+                    <?php while($row = $matches->fetch_assoc()): ?>
+                        <option value="<?php echo $row['match_id']; ?>">
+                            <?php echo $row['team1'] . " vs " . $row['team2']; ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select><br>
+
+                <label for="file">CSV File:</label>
+                <input type="file" name="file" id="file"><br>
+
+                <input type="submit" name="submit" class="my-2 btn btn-danger" value="Insert Data">
+            </form>
+
+            <?php $conn->close(); ?>
+        </div>
+    </section>
+</main><!-- End #main -->
+
+<?php
+
+if (isset($_POST['submit'])) {
+    $season_id = $_POST['season_id'];
+    $series_id = $_POST['series_id'];
+    $stadium_id = $_POST['stadium_id'];
+    $team_match = $_POST['team_match']; // Combined match ID
+    $file = $_FILES['file']['tmp_name'];
+
+    // Check if a file is uploaded
+    if (empty($file) || !file_exists($file)) {
+        echo "No file selected or file upload failed.";
+        exit;
+    }
+
+    // Database connection
+    $conn = new mysqli('localhost', 'root', '', 'cric_stats');
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+
+    // Fetch team IDs for the selected match
+    $match_query = "SELECT team_1, team_2 FROM tbl_matches WHERE id = '$team_match' LIMIT 1";
+    $match_result = $conn->query($match_query);
+    if ($match_result->num_rows > 0) {
+        $match_row = $match_result->fetch_assoc();
+        $team1_id = $match_row['team_1'];
+        $team2_id = $match_row['team_2'];
+    } else {
+        echo "Match details not found.";
+        exit;
+    }
+
+  
+// Code inside the CSV file handling section
+if (($handle = fopen($file, 'r')) !== FALSE) {
+    while (($data = fgetcsv($handle, 1000, ',')) !== FALSE) {
+        // Assuming CSV columns are (column1, column2, column3, ...)
+        $match_no = $data[0];
+        $battsman = $data[1];
+        $bowler = $data[2];
+        $dot_ball = $data[3];
+        $one_run = $data[4];
+        $two_run = $data[5];
+        $three_run = $data[6];
+        $four_run = $data[7];
+        $six_run = $data[8];
+        $wide = $data[9];
+        $wicket = $data[10];
+
+        // Fetch batsman ID from tbl_players
+        $batsman_query = "SELECT id FROM tbl_player WHERE name = '$battsman' LIMIT 1";
+        $batsman_result = $conn->query($batsman_query);
+        if ($batsman_result->num_rows > 0) {
+            $batsman_row = $batsman_result->fetch_assoc();
+            $batsman_id = $batsman_row['id'];
+        } else {
+            // Handle error if batsman not found, insert failed
+            echo "Batsman '$battsman' not found in database.";
+            continue;
+        }
+
+        // Fetch bowler ID from tbl_players
+        $bowler_query = "SELECT id FROM tbl_player WHERE name = '$bowler' LIMIT 1";
+        $bowler_result = $conn->query($bowler_query);
+        if ($bowler_result->num_rows > 0) {
+            $bowler_row = $bowler_result->fetch_assoc();
+            $bowler_id = $bowler_row['id'];
+        } else {
+            // Handle error if bowler not found, insert failed
+            echo "Bowler '$bowler' not found in database.";
+            continue;
+        }
+
+        // Insert into the database using batsman_id, bowler_id, and team_1/team_2 from selected match
+        $sql = "INSERT INTO tbl_team_record 
+                (match_id, season_id, series_id, stadium_id, team_1, team_2, match_no, battsman, bowler, dot_ball, one_run, two_run, three_run, four_run, six_run, wide, wicket) 
+                VALUES 
+                ('$team_match', '$season_id', '$series_id', '$stadium_id', '$team1_id', '$team2_id', '$match_no', '$batsman_id', '$bowler_id', '$dot_ball', '$one_run', '$two_run', '$three_run', '$four_run', '$six_run', '$wide', '$wicket')";
+
+        if (!$conn->query($sql)) {
+            echo "Error: " . $sql . "<br>" . $conn->error;
+        }
+    }
+    fclose($handle);
+    echo "Data inserted successfully";
+} else {
+    echo "Error opening the file.";
 }
 
-// Fetch players for dropdown
-$players = $conn->query("SELECT id, name FROM tbl_player");
 
-// Fetch series for dropdown
-$series = $conn->query("SELECT id, title FROM tbl_series");
+
+    $conn->close();
+}
+
+
 
 ?>
 
-<form method="POST" action="">
-    <label for="player">Select Player:</label>
-    <select name="player_id" id="player">
-        <?php while ($row = $players->fetch_assoc()) { ?>
-            <option value="<?php echo $row['id']; ?>"><?php echo $row['name']; ?></option>
-        <?php } ?>
-    </select>
-
-    <label for="series">Select Series:</label>
-    <select name="series_id" id="series">
-        <?php while ($row = $series->fetch_assoc()) { ?>
-            <option value="<?php echo $row['id']; ?>"><?php echo $row['title']; ?></option>
-        <?php } ?>
-    </select>
-
-    <button type="submit" name="submit">Submit</button>
-</form>
-
 <?php
-if (isset($_POST['submit'])) {
-    $player_id = $_POST['player_id'];
-    $series_id = $_POST['series_id'];
-
-    // Fetch match data, bowler faced, and run details in the selected series
-    $query = "
-        SELECT tr.match_no, bp.bowler, tr.dot_ball, tr.one_run, tr.two_run, tr.three_run, tr.four_run, tr.six_run
-        FROM tbl_team_record tr 
-        JOIN tbl_player p ON tr.id = p.id 
-        JOIN tbl_team_record bp ON tr.bowler = bp.id 
-        WHERE tr.id = ? AND tr.series_id = ?
-    ";
-
-    // Prepare the query and check for errors
-    if ($stmt = $conn->prepare($query)) {
-        $stmt->bind_param("ii", $player_id, $series_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result->num_rows > 0) {
-            echo "<table border='1'>
-                    <tr>
-                        <th>Match Number</th>
-                        <th>Bowler</th>
-                        <th>Dot Balls</th>
-                        <th>1 Run</th>
-                        <th>2 Runs</th>
-                        <th>3 Runs</th>
-                        <th>4 Runs</th>
-                        <th>6 Runs</th>
-                        <th>Total Runs</th>
-                    </tr>";
-
-            while ($row = $result->fetch_assoc()) {
-                $total_runs = $row['one_run'] + ($row['two_run'] * 2) + ($row['three_run'] * 3) + ($row['four_run'] * 4) + ($row['six_run'] * 6);
-                echo "<tr>
-                        <td>" . $row['match_no'] . "</td>
-                        <td>" . $row['bowler'] . "</td>
-                        <td>" . $row['dot_ball'] . "</td>
-                        <td>" . $row['one_run'] . "</td>
-                        <td>" . $row['two_run'] . "</td>
-                        <td>" . $row['three_run'] . "</td>
-                        <td>" . $row['four_run'] . "</td>
-                        <td>" . $row['six_run'] . "</td>
-                        <td>" . $total_runs . "</td>
-                      </tr>";
-            }
-            echo "</table>";
-        } else {
-            echo "No records found for the selected player in the chosen series.";
-        }
-    } else {
-        // Print SQL error if query preparation fails
-        echo "Error in query preparation: " . $conn->error;
-    }
-}
+include 'footer.php';
 ?>

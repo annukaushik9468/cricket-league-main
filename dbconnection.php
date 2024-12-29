@@ -9,9 +9,7 @@
 
    if($con){
     ?>
-  <!-- <script>
-      alert("connection successful");
-    </script>    -->
+  
     <?php
    }else{
 ?>

@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['player_id'], $_POST['s
                     <th>Six Runs</th>
                     <th>Total Runs</th>
                     <th>Total Balls</th>
-                    <th>Outs</th>
+                      <th>Outs</th>
                     <th>Not Outs</th>
                 </tr>
             </thead>
@@ -106,30 +106,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['player_id'], $_POST['s
             </tbody>
         </table>
     <?php } ?>
-    
-<!-- Modal for Match Details -->
-<div id="matchDetailsModal" style="display:none;">
+
+    <!-- Modal for Match Details -->
+       <!-- Modal for Match Details -->
+    <div id="matchDetailsModal" style="display:none;">
     <h3>Match Details</h3>
     <table border="1" id="matchDetailsTable">
         <thead>
             <tr>
                 <th>Opponent Team</th>
-                <th>Total Matches</th>
+                <th>Total Matches</th> <!-- Added total matches column -->
                 <th>Total Runs</th>
                 <th>Total Balls</th>
                 <th>Four Runs</th>
                 <th>Six Runs</th>
                 <th>Outs</th>
                 <th>Not Outs</th>
-                <th>Stadium</th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
-
     <button onclick="document.getElementById('matchDetailsModal').style.display='none';">Close</button>
 </div>
-
+    
 <!-- Modal for Bowler Details -->
 <div id="bowlerDetailsModal" style="display:none;">
     <h3>Bowler Details</h3>
@@ -140,113 +139,76 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['player_id'], $_POST['s
                 <th>Total Runs</th>
                 <th>Total Balls</th>
                 <th>Total Outs</th>
-                <th>Four Runs</th>
-                <th>Six Runs</th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
-
     <button onclick="document.getElementById('bowlerDetailsModal').style.display='none';">Close</button>
 </div>
 
-<script>
-// Handle match details click
-document.querySelectorAll('.match-link').forEach(link => {
+
+    <script>
+            document.querySelectorAll('.match-link').forEach(link => {
     link.addEventListener('click', event => {
         event.preventDefault();
         const playerId = event.target.getAttribute('data-player-id');
         const seriesId = event.target.getAttribute('data-series-id');
 
-        fetch(`1.php?player_id=${playerId}&series_id=${seriesId}`)
+        fetch(`get_opponent_performance.php?player_id=${playerId}&series_id=${seriesId}`)
             .then(response => response.json())
             .then(data => {
                 const tableBody = document.querySelector('#matchDetailsTable tbody');
                 tableBody.innerHTML = '';
-
-                if (data.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="9">No data found</td></tr>';
-                    return;
-                }
-
                 data.forEach(row => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>${row.player_team} vs ${row.opponent_team}</td>
-                        <td><a href="#" class="match-detail-link" data-match-id="${row.match_id}" data-player-id="${playerId}">${row.total_matches}</a></td>
+                        <td>${row.opponent_team}</td>
+                        <td><a href="#" class="bowler-link" data-player-id="${playerId}" data-series-id="${seriesId}" data-opponent-team="${row.opponent_team_id}">${row.total_matches}</a></td>
                         <td>${row.total_runs}</td>
                         <td>${row.total_balls}</td>
                         <td>${row.four_runs}</td>
                         <td>${row.six_runs}</td>
                         <td>${row.total_outs}</td>
                         <td>${row.total_not_outs}</td>
-                        <td>${row.stadium_name}</td>
                     `;
                     tableBody.appendChild(tr);
                 });
-
                 document.getElementById('matchDetailsModal').style.display = 'block';
 
-                // Add click event for each match-detail-link
-                document.querySelectorAll('.match-detail-link').forEach(link => {
-                    link.addEventListener('click', event => {
+                // Add event listeners for bowler details links
+                document.querySelectorAll('.bowler-link').forEach(bowlerLink => {
+                    bowlerLink.addEventListener('click', event => {
                         event.preventDefault();
-                        const matchId = event.target.getAttribute('data-match-id');
                         const playerId = event.target.getAttribute('data-player-id');
-                        fetchBowlerDetails(matchId, playerId);
+                        const seriesId = event.target.getAttribute('data-series-id');
+                        const opponentTeam = event.target.getAttribute('data-opponent-team');
+
+                        fetch(`get_bowler_performance.php?player_id=${playerId}&series_id=${seriesId}&opponent_team=${opponentTeam}`)
+                            .then(response => response.json())
+                            .then(bowlerData => {
+                                const bowlerTableBody = document.querySelector('#bowlerDetailsTable tbody');
+                                bowlerTableBody.innerHTML = '';
+                                bowlerData.forEach(row => {
+                                    const tr = document.createElement('tr');
+                                    tr.innerHTML = `
+                                        <td>${row.bowler_name}</td>
+                                        <td>${row.total_runs}</td>
+                                        <td>${row.total_balls}</td>
+                                        <td>${row.total_outs}</td>
+                                    `;
+                                    bowlerTableBody.appendChild(tr);
+                                });
+                                document.getElementById('bowlerDetailsModal').style.display = 'block';
+                            });
                     });
                 });
-            })
-            .catch(error => console.error('Error fetching match details:', error));
+            });
     });
 });
-// Function to fetch bowler details
-function fetchBowlerDetails(matchId, playerId) {
-    fetch(`bowler_details.php?match_id=${matchId}&player_id=${playerId}`)
-        .then(response => {
-            // Check if the response is valid JSON
-            return response.json()
-                .catch(error => {
-                    console.error('Error parsing JSON:', error);
-                    return { message: 'Invalid JSON response' };  // Return a default error message
-                });
-        })
-        .then(data => {
-            const tableBody = document.querySelector('#bowlerDetailsTable tbody');
-            tableBody.innerHTML = '';
-
-            // Check if a message was returned or if the data is empty
-            if (data.message) {
-                tableBody.innerHTML = `<tr><td colspan="6">${data.message}</td></tr>`;
-                return;
-            }
-
-            // Populate table with fetched data
-            data.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${row.bowler_name}</td>
-                    <td>${row.total_runs}</td>
-                    <td>${row.total_balls}</td>
-                    <td>${row.total_outs}</td>
-                    <td>${row.four_runs}</td>
-                    <td>${row.six_runs}</td>
-                `;
-                tableBody.appendChild(tr);
-            });
-
-            document.getElementById('bowlerDetailsModal').style.display = 'block';
-        })
-        .catch(error => {
-            console.error('Error fetching bowler details:', error);
-            const tableBody = document.querySelector('#bowlerDetailsTable tbody');
-            tableBody.innerHTML = '<tr><td colspan="6">Error fetching data</td></tr>';
-        });
-}
 
 
-</script>
-
-<?php include 'footer.php'; ?>
+    </script>
+    <?php include'footer.php'; ?>
 </body>
 </html>
+        

@@ -1,17 +1,6 @@
 <?php include 'header.php'; ?>
 <?php
-// Database connection
-$host = 'localhost';  // Your database host
-$username = 'root';    // Your database username
-$password = '';        // Your database password
-$database = 'cric_stats';  // Your database name
-
-$conn = new mysqli($host, $username, $password, $database);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+include 'dbconnect.php';
 
 // Fetch players from tbl_player
 $playersQuery = "SELECT id, name FROM tbl_player";

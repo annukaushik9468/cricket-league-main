@@ -41,7 +41,7 @@ if (isset($_POST['submit'])) {
                 <div class="form-group ml-3">
                     <div class="row mb-3">
                         <div class="col-sm-12">
-                            <select class="col-md-12 mt-3 mb-3 form-control" name="series_id" required>
+                            <select class="col-md-12 mt-3 mb-3 form-control" id="series_id" name="series_id" required>
                                 <option value="" selected>Select Series</option>
                                 <?php
                                 $series = mysqli_query($con, "SELECT * FROM tbl_series");
@@ -79,23 +79,11 @@ if (isset($_POST['submit'])) {
                         <div class="col-sm-12">
                             <select class="col-md-12 mt-3 mb-3 form-control" id="team_1" name="team_1" required>
                                 <option value="" selected>Select Team 1</option>
-                                <?php
-                                $teams = mysqli_query($con, "SELECT * FROM tbl_team");
-                                while ($row = mysqli_fetch_assoc($teams)) {
-                                    echo "<option value='{$row['id']}'>{$row['title']}</option>";
-                                }
-                                ?>
                             </select>
                         </div>
                         <div class="col-sm-12">
                             <select class="col-md-12 mt-3 mb-3 form-control" id="team_2" name="team_2" required>
                                 <option value="" selected>Select Team 2</option>
-                                <?php
-                                $teams = mysqli_query($con, "SELECT * FROM tbl_team");
-                                while ($row = mysqli_fetch_assoc($teams)) {
-                                    echo "<option value='{$row['id']}'>{$row['title']}</option>";
-                                }
-                                ?>
                             </select>
                         </div>
                     </div>
@@ -107,6 +95,42 @@ if (isset($_POST['submit'])) {
 </section>
 
 <script>
+    document.getElementById('series_id').addEventListener('change', function () {
+        const selectedSeriesId = this.value;
+
+        // Fetch teams for the selected series using AJAX
+        if (selectedSeriesId) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'fetch-terms.php?series_id=' + selectedSeriesId, true);
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    const teams = JSON.parse(xhr.responseText);
+                    const team1Dropdown = document.getElementById('team_1');
+                    const team2Dropdown = document.getElementById('team_2');
+
+                    // Clear previous team options
+                    team1Dropdown.innerHTML = '<option value="" selected>Select Team 1</option>';
+                    team2Dropdown.innerHTML = '<option value="" selected>Select Team 2</option>';
+
+                    // Populate team dropdowns with new data
+                    teams.forEach(function (team) {
+                        const option = document.createElement('option');
+                        option.value = team.id;
+                        option.textContent = team.title;
+                        team1Dropdown.appendChild(option);
+                        
+                        const option2 = document.createElement('option');
+                        option2.value = team.id;
+                        option2.textContent = team.title;
+                        team2Dropdown.appendChild(option2);
+                    });
+                }
+            };
+            xhr.send();
+        }
+    });
+
+    // Hide the selected team in team_2 dropdown
     document.getElementById('team_1').addEventListener('change', function () {
         const selectedTeam1 = this.value;
         const team2Dropdown = document.getElementById('team_2');

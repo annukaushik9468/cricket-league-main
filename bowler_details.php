@@ -13,22 +13,23 @@ if (isset($_GET['player_id'], $_GET['series_id'])) {
     $player_id = (int)$_GET['player_id'];
     $series_id = (int)$_GET['series_id'];
 
+    
     $query = "
         SELECT 
-            t2.title AS opponent_team,
-            COUNT(DISTINCT tr.match_id) AS total_matches,  -- Count total matches player played against the opponent
+            b.name AS bowler_name,
             SUM(tr.one_run + tr.two_run * 2 + tr.three_run * 3 + tr.four_run * 4 + tr.six_run * 6) AS total_runs,
             SUM(tr.dot_ball + tr.one_run + tr.two_run + tr.three_run + tr.four_run + tr.six_run) AS total_balls,
-            SUM(tr.four_run) AS four_runs,
-            SUM(tr.six_run) AS six_runs,
-            SUM(CASE WHEN tr.wicket IS NOT NULL THEN 1 ELSE 0 END) AS total_outs,  -- Count outs
-            SUM(CASE WHEN tr.wicket IS NULL THEN 1 ELSE 0 END) AS total_not_outs   -- Count not outs
+            SUM(CASE WHEN tr.wicket IS NOT NULL THEN 1 ELSE 0 END) AS total_outs
         FROM tbl_team_record tr
-        JOIN tbl_team t2 ON tr.team_2 = t2.id
-        WHERE tr.battsman = $player_id AND tr.series_id = $series_id
-        GROUP BY t2.title
+        JOIN tbl_player b ON tr.bowler = b.id
+        WHERE tr.battsman = ? AND tr.series_id = ? AND tr.team_2 = ?
+        GROUP BY b.name
     ";
-    $result = $conn->query($query);
+
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param('ii', $player_id, $series_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     $data = [];
     while ($row = $result->fetch_assoc()) {
@@ -36,5 +37,9 @@ if (isset($_GET['player_id'], $_GET['series_id'])) {
     }
 
     echo json_encode($data);
+} else {
+    echo json_encode([]);
 }
+
+$conn->close();
 ?>

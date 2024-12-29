@@ -1,5 +1,3 @@
-<?php include 'dbconnection.php' ?>
-
 <?php include 'header.php' ?>
 
 <main id="main" class="main">
@@ -13,18 +11,7 @@
 
 
 <?php
-// Database connection
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "cric_stats"; // Change this to your database name
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+include 'dbconnect.php';
 
 // Fetching dropdown data for battsman, season, and series
 $batsmen = $conn->query("SELECT DISTINCT battsman FROM tbl_team_record");

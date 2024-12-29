@@ -1,14 +1,7 @@
 <?php
 include 'header.php';
-$host = 'localhost';
-$user = 'root';
-$pass = '';
-$dbname = 'cric_stats';
-$conn = new mysqli($host, $user, $pass, $dbname);
+include 'dbconnect.php';
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
 
 $player_query = "SELECT id, name FROM tbl_player";
 $series_query = "SELECT id, title FROM tbl_series";

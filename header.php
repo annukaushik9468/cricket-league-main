@@ -406,7 +406,25 @@
         </ul>
       </li><!-- End Icons Nav -->
 
- <li class="nav-item">
+ 
+
+        
+    
+<li class="nav-item">
+        <a class="nav-link collapsed" href="tbl_match_result.php">
+           <i class="bi bi-grid"></i>
+          <span>Match Toss & Win Result</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+  <li class="nav-item">
+        <a class="nav-link collapsed" href="tbl_team_record.php">
+          <i class="bi bi-grid"></i>
+          <span>Upload CSV file</span>
+        </a>
+      </li><!-- End Dashboard Nav -->
+
+
+      <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#icon-nav" data-bs-toggle="collapse" href="#">
           <i class="bi bi-gem"></i><span>Player Data With Team</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
@@ -441,21 +459,6 @@
           </li>
         </ul>
       </li><!-- End Charts Nav -->
-
-        
-    
-<li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_match_result.php">
-           <i class="bi bi-grid"></i>
-          <span>Match Toss & Win Result</span>
-        </a>
-      </li><!-- End Profile Page Nav -->
-  <li class="nav-item">
-        <a class="nav-link collapsed" href="tbl_team_record.php">
-          <i class="bi bi-grid"></i>
-          <span>Upload CSV file</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
 
       <li class="nav-item">
         <a class="nav-link collapsed" href="tbl_player_record.php">

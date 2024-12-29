@@ -1,4 +1,3 @@
-<?php include 'dbconnection.php' ?>
 
 <?php include 'header.php' ?>
 
