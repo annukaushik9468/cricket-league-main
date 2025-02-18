@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['player_id'], $_POST['s
                     <th>Six Runs</th>
                     <th>Total Runs</th>
                     <th>Total Balls</th>
-                    <th>Outs</th>
+                      <th>Outs</th>
                     <th>Not Outs</th>
                 </tr>
             </thead>
@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['player_id'], $_POST['s
                 <th>Six Runs</th>
                 <th>Outs</th>
                 <th>Not Outs</th>
-                <th>Stadium</th>
+                <th>Stadium</th> <!-- Added Stadium column -->
             </tr>
         </thead>
         <tbody></tbody>
@@ -130,39 +130,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['player_id'], $_POST['s
     <button onclick="document.getElementById('matchDetailsModal').style.display='none';">Close</button>
 </div>
 
-<!-- Modal for Bowler Details -->
-<div id="bowlerDetailsModal" style="display:none;">
-    <h3>Bowler Details</h3>
-    <table border="1" id="bowlerDetailsTable">
-        <thead>
-            <tr>
-                <th>Bowler Name</th>
-                <th>Total Runs</th>
-                <th>Total Balls</th>
-                <th>Total Outs</th>
-                <th>Four Runs</th>
-                <th>Six Runs</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-
-    <button onclick="document.getElementById('bowlerDetailsModal').style.display='none';">Close</button>
-</div>
-
 <script>
-// Handle match details click
 document.querySelectorAll('.match-link').forEach(link => {
     link.addEventListener('click', event => {
         event.preventDefault();
         const playerId = event.target.getAttribute('data-player-id');
         const seriesId = event.target.getAttribute('data-series-id');
 
+        // Fetch match data for the player and series
         fetch(`1.php?player_id=${playerId}&series_id=${seriesId}`)
             .then(response => response.json())
             .then(data => {
                 const tableBody = document.querySelector('#matchDetailsTable tbody');
-                tableBody.innerHTML = '';
+                tableBody.innerHTML = ''; // Clear previous data
 
                 if (data.length === 0) {
                     tableBody.innerHTML = '<tr><td colspan="9">No data found</td></tr>';
@@ -170,83 +150,31 @@ document.querySelectorAll('.match-link').forEach(link => {
                 }
 
                 data.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${row.player_team} vs ${row.opponent_team}</td>
-                        <td><a href="#" class="match-detail-link" data-match-id="${row.match_id}" data-player-id="${playerId}">${row.total_matches}</a></td>
-                        <td>${row.total_runs}</td>
-                        <td>${row.total_balls}</td>
-                        <td>${row.four_runs}</td>
-                        <td>${row.six_runs}</td>
-                        <td>${row.total_outs}</td>
-                        <td>${row.total_not_outs}</td>
-                        <td>${row.stadium_name}</td>
-                    `;
-                    tableBody.appendChild(tr);
-                });
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>${row.player_team} vs ${row.opponent_team}</td>
+        <td>${row.total_matches}</td>
+        <td>${row.total_runs}</td>
+        <td>${row.total_balls}</td>
+        <td>${row.four_runs}</td>
+        <td>${row.six_runs}</td>
+        <td>${row.total_outs}</td>
+        <td>${row.total_not_outs}</td>
+        <td>${row.stadium_name}</td>  <!-- Correctly display the stadium name -->
+    `;
+    tableBody.appendChild(tr);
+});
 
                 document.getElementById('matchDetailsModal').style.display = 'block';
-
-                // Add click event for each match-detail-link
-                document.querySelectorAll('.match-detail-link').forEach(link => {
-                    link.addEventListener('click', event => {
-                        event.preventDefault();
-                        const matchId = event.target.getAttribute('data-match-id');
-                        const playerId = event.target.getAttribute('data-player-id');
-                        fetchBowlerDetails(matchId, playerId);
-                    });
-                });
             })
             .catch(error => console.error('Error fetching match details:', error));
     });
 });
-// Function to fetch bowler details
-function fetchBowlerDetails(matchId, playerId) {
-    fetch(`bowler_details.php?match_id=${matchId}&player_id=${playerId}`)
-        .then(response => {
-            // Check if the response is valid JSON
-            return response.json()
-                .catch(error => {
-                    console.error('Error parsing JSON:', error);
-                    return { message: 'Invalid JSON response' };  // Return a default error message
-                });
-        })
-        .then(data => {
-            const tableBody = document.querySelector('#bowlerDetailsTable tbody');
-            tableBody.innerHTML = '';
-
-            // Check if a message was returned or if the data is empty
-            if (data.message) {
-                tableBody.innerHTML = `<tr><td colspan="6">${data.message}</td></tr>`;
-                return;
-            }
-
-            // Populate table with fetched data
-            data.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${row.bowler_name}</td>
-                    <td>${row.total_runs}</td>
-                    <td>${row.total_balls}</td>
-                    <td>${row.total_outs}</td>
-                    <td>${row.four_runs}</td>
-                    <td>${row.six_runs}</td>
-                `;
-                tableBody.appendChild(tr);
-            });
-
-            document.getElementById('bowlerDetailsModal').style.display = 'block';
-        })
-        .catch(error => {
-            console.error('Error fetching bowler details:', error);
-            const tableBody = document.querySelector('#bowlerDetailsTable tbody');
-            tableBody.innerHTML = '<tr><td colspan="6">Error fetching data</td></tr>';
-        });
-}
-
-
 </script>
 
-<?php include 'footer.php'; ?>
+
+
+
+    <?php include'footer.php'; ?>
 </body>
 </html>

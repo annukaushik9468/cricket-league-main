@@ -28,7 +28,7 @@ include 'header.php';
       
 <?php
 // Database connection
-$conn = new mysqli("localhost", "root", "", "ecommerce_adim");
+$conn = new mysqli("localhost", "root", "", "cric_stats");
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);

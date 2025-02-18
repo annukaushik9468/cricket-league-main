@@ -162,11 +162,13 @@ p {
                 <script>
                     function fetchTeamsBySeries() {
                         var seriesId = document.getElementById("series_id").value;
+                        var team_1 = document.getElementById("team_1").value;
+                        var team_2 = document.getElementById("team_2").value;
 
                         $.ajax({
                             url: "fetch_team.php",
                             method: "POST",
-                            data: { series_id: seriesId },
+                            data: { series_id: seriesId,team_1 : team_1, team_2:team_2 },
                             success: function(data) {
                                 var teams = JSON.parse(data);
 
@@ -212,7 +214,53 @@ p {
                             }
                         });
                     }
+                    function fetchTeamsBySeries2() {
+                        var seriesId = document.getElementById("series_id").value;
+                        var team_1 = document.getElementById("team_1").value;
+                        var team_2 = document.getElementById("team_2").value;
 
+                        $.ajax({
+                            url: "fetch_team_2.php",
+                            method: "POST",
+                            data: { series_id: seriesId,team_1 : team_1, team_2:team_2 },
+                            success: function(data) {
+                                var teams = JSON.parse(data);
+
+                                // Update team_1, team_2, toss_winner, and batting_team dropdowns
+                                var tossWinnerRadios = document.getElementById("toss_winner");
+                                var battingTeamRadios = document.getElementById("batting_team");
+                                var winnerDropdown = document.getElementById("winner_team");
+                                var loserDropdown = document.getElementById("loser_team");
+
+                                var defaultOption = '<option value="">-- Select --</option>';
+                                
+                                tossWinnerRadios.innerHTML = '';
+                                battingTeamRadios.innerHTML = '';
+                                winnerDropdown.innerHTML = defaultOption;
+                                loserDropdown.innerHTML = defaultOption;
+
+                                teams.forEach(function(team) {
+
+                                    var radio = `<label>
+                                        <input type="radio" name="toss_winner" value="${team.id}" onclick="setTossLoser(${team.id})"> ${team.title}
+                                    </label>`;
+                                    tossWinnerRadios.innerHTML += radio;
+
+                                    var battingRadio = `<label>
+                                        <input type="radio" name="batting_team" value="${team.id}" onclick="setFieldingTeam(${team.id})"> ${team.title}
+                                    </label>`;
+                                    battingTeamRadios.innerHTML += battingRadio;
+                                });
+
+                                // Populate winner_team and loser_team based on series
+                                teams.forEach(function(team) {
+                                    var winnerOption = `<option value="${team.id}">${team.title}</option>`;
+                                    winnerDropdown.innerHTML += winnerOption;
+                                    loserDropdown.innerHTML += winnerOption;
+                                });
+                            }
+                        });
+                    }
                     function setTossLoser(selectedTeamId) {
                         var team1 = document.getElementById("team_1").value;
                         var team2 = document.getElementById("team_2").value;
@@ -299,12 +347,12 @@ p {
                     </select>
 
                     <label for="team_1">Team 1:</label>
-                    <select id="team_1" name="team_1" class="form-control" required>
+                    <select id="team_1" name="team_1" class="form-control" required onchange="fetchTeamsBySeries2()">
                         <option value="">-- Select Team 1 --</option>
                     </select>
 
                     <label for="team_2">Team 2:</label>
-                    <select id="team_2" name="team_2" class="form-control" required>
+                    <select id="team_2" name="team_2" class="form-control" required onchange="fetchTeamsBySeries2()">
                         <option value="">-- Select Team 2 --</option>
                     </select>
 
